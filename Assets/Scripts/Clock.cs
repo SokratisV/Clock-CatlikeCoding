@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 
@@ -11,22 +12,18 @@ public class Clock : MonoBehaviour
     private DateTime time;
     private TimeSpan timeSpan;
     private bool lightsOn = false;
-
     public bool continuous, manual;
     public int hours = 0, minutes = 0, seconds = 0, angle = 0;
     public float sunRotSpeed = 1;
-    public Transform hoursTransform, minutesTransform, secondsTransform;
+    public Transform hoursTransform, minutesTransform, secondsTransform, backlightTransform;
     public TextMeshProUGUI digitalText;
-    public GameObject directionalLight;
     public Material[] materials;
+    public GameObject spotLight, smallLights, directionalLight;
 
     private void Start()
     {
         UpdateLight();
-        if (angle % 360 < -13 || angle % 360 > 190)
-        {
-            ToggleLights();
-        }
+        StartCoroutine(ActivateLights());
     }
 
     void Update()
@@ -41,6 +38,14 @@ public class Clock : MonoBehaviour
         }
     }
 
+    private IEnumerator ActivateLights(){
+        yield return new WaitForEndOfFrame();
+        if (angle % 360 < -13 || angle % 360 > 190)
+        {
+            ToggleLights();
+        }
+    }
+
     private void ToggleLights()
     {
         if (lightsOn)
@@ -48,12 +53,18 @@ public class Clock : MonoBehaviour
             hoursTransform.GetChild(0).GetComponent<Renderer>().material = materials[6];
             minutesTransform.GetChild(0).GetComponent<Renderer>().material = materials[0];
             secondsTransform.GetChild(0).GetComponent<Renderer>().material = materials[3];
+            backlightTransform.GetComponent<Renderer>().material = materials[4];
+            spotLight.SetActive(false);
+            smallLights.SetActive(false);
         }
         else
         {
             hoursTransform.GetChild(0).GetComponent<Renderer>().material = materials[7];
             minutesTransform.GetChild(0).GetComponent<Renderer>().material = materials[1];
             secondsTransform.GetChild(0).GetComponent<Renderer>().material = materials[2];
+            backlightTransform.GetComponent<Renderer>().material = materials[5];
+            spotLight.SetActive(true);
+            smallLights.SetActive(true);
         }
         lightsOn = !lightsOn;
     }
@@ -120,10 +131,7 @@ public class Clock : MonoBehaviour
     }
 
     // Updates digital clock (text).
-    private void UpdateDigitalTime()
-    {
-        digitalText.text = IntToTwoDigitString(hours, 24) + ":" + IntToTwoDigitString(minutes, 60) + ":" + IntToTwoDigitString(seconds, 60);
-    }
+    private void UpdateDigitalTime() => digitalText.text = IntToTwoDigitString(hours, 24) + ":" + IntToTwoDigitString(minutes, 60) + ":" + IntToTwoDigitString(seconds, 60);
 
     private string IntToTwoDigitString(int num, int modulo)
     {
